@@ -32,9 +32,7 @@ public class EFarmApplication implements CommandLineRunner {
 		System.out.println("Available endpoints:");
 		System.out.println("  - POST /api/auth/register");
 		System.out.println("  - POST /api/auth/login");
-		System.out.println("  - GET  /api/auth/verify-email");
-		System.out.println("  - GET  /api/auth/roles");
-		System.out.println("  - GET  /api/users/profile");
+		System.out.println("  - GET  /api/auth/test");
 		System.out.println("=================================================");
 	}
 }

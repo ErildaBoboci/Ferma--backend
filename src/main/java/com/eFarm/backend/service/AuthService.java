@@ -1,12 +1,13 @@
-package com.ferma.service;
+package com.eFarm.backend.service;
 
-import com.ferma.dto.AuthResponse;
-import com.ferma.dto.LoginRequest;
-import com.ferma.dto.RegisterRequest;
-import com.ferma.entity.Role;
-import com.ferma.entity.User;
-import com.ferma.repository.RoleRepository;
-import com.ferma.repository.UserRepository;
+import com.eFarm.backend.dto.AuthResponse;
+import com.eFarm.backend.dto.LoginRequest;
+import com.eFarm.backend.dto.RegisterRequest;
+import com.eFarm.backend.entity.Role;
+import com.eFarm.backend.entity.User;
+import com.eFarm.backend.repository.RoleRepository;
+import com.eFarm.backend.repository.UserRepository;
+import com.eFarm.backend.security.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -37,7 +38,7 @@ public class AuthService {
     private JwtService jwtService;
 
     @Autowired
-    private UserService userService;
+    private CustomUserDetailsService userDetailsService;
 
     public AuthResponse login(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
@@ -49,7 +50,7 @@ public class AuthService {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        String token = jwtService.generateToken(userService.loadUserByUsername(user.getUsername()));
+        String token = jwtService.generateToken(userDetailsService.loadUserByUsername(user.getUsername()));
 
         Set<String> roles = user.getRoles().stream()
                 .map(Role::getName)
@@ -88,5 +89,21 @@ public class AuthService {
         userRepository.save(user);
 
         return "User u regjistrua me sukses!";
+    }
+
+    // Metoda që mungonte
+    public void initializeRoles() {
+        // Krijo rolet nëse nuk ekzistojnë
+        if (roleRepository.findByName("ADMIN").isEmpty()) {
+            Role adminRole = new Role("ADMIN");
+            roleRepository.save(adminRole);
+            System.out.println("Role ADMIN u krijua!");
+        }
+
+        if (roleRepository.findByName("KUJDESTAR").isEmpty()) {
+            Role kujdestarRole = new Role("KUJDESTAR");
+            roleRepository.save(kujdestarRole);
+            System.out.println("Role KUJDESTAR u krijua!");
+        }
     }
 }

@@ -1,5 +1,4 @@
-package com.ferma.dto;
-
+package com.eFarm.backend.dto;
 import java.util.Set;
 
 public class AuthResponse {

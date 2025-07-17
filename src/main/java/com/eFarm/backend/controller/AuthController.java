@@ -1,9 +1,9 @@
-package com.ferma.controller;
+package com.eFarm.backend.controller;
 
-import com.ferma.dto.AuthResponse;
-import com.ferma.dto.LoginRequest;
-import com.ferma.dto.RegisterRequest;
-import com.ferma.service.AuthService;
+import com.eFarm.backend.dto.AuthResponse;
+import com.eFarm.backend.dto.LoginRequest;
+import com.eFarm.backend.dto.RegisterRequest;
+import com.eFarm.backend.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

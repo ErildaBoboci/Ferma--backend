@@ -10,7 +10,6 @@ import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -24,7 +23,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private JwtService jwtService;
 
     @Autowired
-    private UserDetailsService userDetailsService;
+    private CustomUserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(
@@ -35,59 +34,51 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
-        final String userEmail;
+        final String username;
 
-        // Check if Authorization header exists and starts with "Bearer "
+        // Kontrollo nëse Authorization header ekziston dhe fillon me "Bearer "
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Extract JWT token
+        // Ekstrakto JWT token
         jwt = authHeader.substring(7);
 
         try {
-            // Extract user email from JWT token
-            userEmail = jwtService.extractUsername(jwt);
+            // Ekstrakto username nga JWT token
+            username = jwtService.extractUsername(jwt);
 
-            // Check if user email exists and no authentication exists in SecurityContext
-            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            // Kontrollo nëse username ekziston dhe nuk ka autentikim në SecurityContext
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                // Load user details
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+                // Ngarko detajet e user-it
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
-                // Validate token
+                // Valido token
                 if (jwtService.isTokenValid(jwt, userDetails)) {
 
-                    // Create authentication token
+                    // Krijo authentication token
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
                             userDetails.getAuthorities()
                     );
 
-                    // Set authentication details
+                    // Vendos detajet e autentikimit
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                    // Set authentication in SecurityContext
+                    // Vendos autentikimin në SecurityContext
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
         } catch (Exception e) {
-            // Log the error but don't throw it to avoid breaking the filter chain
+            // Log gabimin por mos e ndërprit filter chain
             logger.error("Error processing JWT token: " + e.getMessage());
-
-            // Clear security context
             SecurityContextHolder.clearContext();
-
-            // Set error response
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"Token i pavlefshëm\", \"message\": \"" + e.getMessage() + "\"}");
-            return;
         }
 
-        // Continue with the filter chain
+        // Vazhdo me filter chain
         filterChain.doFilter(request, response);
     }
 
@@ -95,12 +86,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
 
-        // Skip JWT filter for public endpoints
+        // Mos përdor JWT filter për endpoint-et publike
         return path.startsWith("/api/auth/") ||
                 path.startsWith("/api/public/") ||
                 path.equals("/") ||
                 path.startsWith("/favicon.ico") ||
-                path.startsWith("/error") ||
-                path.startsWith("/actuator/health");
+                path.startsWith("/error");
     }
 }

@@ -1,4 +1,4 @@
-package com.ferma.entity;
+package com.eFarm.backend.entity;
 
 import jakarta.persistence.*;
 import java.util.Set;

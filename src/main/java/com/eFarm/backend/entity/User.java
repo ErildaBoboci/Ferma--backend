@@ -1,4 +1,4 @@
-package com.ferma.entity;
+package com.eFarm.backend.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -41,6 +41,9 @@ public class User {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
+    @Column(name = "email_verified")
+    private Boolean emailVerified = true; // Për tani e vendosim true
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",
@@ -59,6 +62,8 @@ public class User {
         this.firstName = firstName;
         this.lastName = lastName;
         this.createdAt = LocalDateTime.now();
+        this.isActive = true;
+        this.emailVerified = true;
     }
 
     // Getters and Setters
@@ -86,6 +91,36 @@ public class User {
     public Boolean getIsActive() { return isActive; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
 
+    public Boolean getEmailVerified() { return emailVerified; }
+    public void setEmailVerified(Boolean emailVerified) { this.emailVerified = emailVerified; }
+
     public Set<Role> getRoles() { return roles; }
     public void setRoles(Set<Role> roles) { this.roles = roles; }
+
+    // Metodat e reja që mungonin
+    public Role getRole() {
+        if (roles != null && !roles.isEmpty()) {
+            return roles.iterator().next(); // Merr rolin e parë
+        }
+        return null;
+    }
+
+    public boolean isEnabled() {
+        return this.isActive != null && this.isActive;
+    }
+
+    public boolean isEmailVerified() {
+        return this.emailVerified != null && this.emailVerified;
+    }
+
+    public String getFullName() {
+        if (firstName != null && lastName != null) {
+            return firstName + " " + lastName;
+        } else if (firstName != null) {
+            return firstName;
+        } else if (lastName != null) {
+            return lastName;
+        }
+        return username;
+    }
 }
