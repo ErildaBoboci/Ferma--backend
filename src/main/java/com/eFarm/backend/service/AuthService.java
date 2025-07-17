@@ -1,32 +1,25 @@
-package com.eFarm.backend.service;
+package com.ferma.service;
 
-import com.eFarm.backend.dto.LoginRequest;
-import com.eFarm.backend.dto.LoginResponse;
-import com.eFarm.backend.dto.RegisterRequest;
-import com.eFarm.backend.entity.Role;
-import com.eFarm.backend.entity.User;
-import com.eFarm.backend.repository.RoleRepository;
-import com.eFarm.backend.repository.UserRepository;
+import com.ferma.dto.AuthResponse;
+import com.ferma.dto.LoginRequest;
+import com.ferma.dto.RegisterRequest;
+import com.ferma.entity.Role;
+import com.ferma.entity.User;
+import com.ferma.repository.RoleRepository;
+import com.ferma.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
-@Transactional
 public class AuthService {
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
 
     @Autowired
     private UserRepository userRepository;
@@ -38,81 +31,62 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
     private JwtService jwtService;
 
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private UserDetailsService userDetailsService;
-
-    private static final List<String> VALID_ROLES = Arrays.asList("ADMIN", "KUJDESTAR_KAFSHESH", "KUJDESTAR_FERME");
-
-    public User register(RegisterRequest request) {
-        // Validate request
-        validateRegisterRequest(request);
-
-        // Create user
-        User user = userService.createUser(
-                request.getFirstName(),
-                request.getLastName(),
-                request.getEmail(),
-                request.getPassword(),
-                request.getRoleName(),
-                request.getPhoneNumber()
+    public AuthResponse login(LoginRequest request) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
 
-        return user;
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String token = jwtService.generateToken(userService.loadUserByUsername(user.getUsername()));
+
+        Set<String> roles = user.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toSet());
+
+        return new AuthResponse(token, user.getId(), user.getUsername(), user.getEmail(),
+                user.getFirstName(), user.getLastName(), roles);
     }
 
-    public LoginResponse login(LoginRequest request) {
-        try {
-            // Authenticate user
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.getEmail(),
-                            request.getPassword()
-                    )
-            );
-
-            // Get user details
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            User user = userService.findByEmail(userDetails.getUsername());
-
-            // Check if user is enabled
-            if (!user.isEnabled()) {
-                throw new RuntimeException("Llogaria nuk është aktivizuar. Ju lutem verifikoni email-in tuaj.");
-            }
-
-            // Check if email is verified
-            if (!user.isEmailVerified()) {
-                throw new RuntimeException("Email-i nuk është verifikuar. Ju lutem verifikoni email-in tuaj.");
-            }
-
-            // Generate JWT token
-            String token = jwtService.generateToken(userDetails);
-
-            // Update last login
-            userService.updateLastLogin(user.getEmail());
-
-            // Create response
-            LoginResponse.UserInfo userInfo = new LoginResponse.UserInfo(
-                    user.getId(),
-                    user.getFirstName(),
-                    user.getLastName(),
-                    user.getEmail(),
-                    user.getPhoneNumber(),
-                    user.getRole().getName(),
-                    user.isEnabled(),
-                    user.isEmailVerified(),
-                    user.getLastLogin()
-            );
-
-            return new LoginResponse(token, jwtService.getExpirationTime(), userInfo);
-
-        } catch (Exception e) {
-            throw new RuntimeException("Email ose password i gabuar", e);
+    public String register(RegisterRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new RuntimeException("Username është përdorur nga dikush tjetër!");
         }
-    }
 
-    public void logout
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email është përdorur nga dikush tjetër!");
+        }
+
+        User user = new User(request.getUsername(), request.getEmail(),
+                passwordEncoder.encode(request.getPassword()),
+                request.getFirstName(), request.getLastName());
+
+        Set<Role> roles = new HashSet<>();
+
+        if (request.getRole().equalsIgnoreCase("ADMIN")) {
+            Role adminRole = roleRepository.findByName("ADMIN")
+                    .orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
+            roles.add(adminRole);
+        } else {
+            Role userRole = roleRepository.findByName("KUJDESTAR")
+                    .orElseThrow(() -> new RuntimeException("Role KUJDESTAR not found"));
+            roles.add(userRole);
+        }
+
+        user.setRoles(roles);
+        userRepository.save(user);
+
+        return "User u regjistrua me sukses!";
+    }
+}

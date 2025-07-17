@@ -1,9 +1,11 @@
-package com.example.ferma.repository;
+package com.ferma.repository;
 
-import com.example.ferma.model.Role;
+import com.ferma.entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
+@Repository
 public interface RoleRepository extends JpaRepository<Role, Long> {
     Optional<Role> findByName(String name);
 }

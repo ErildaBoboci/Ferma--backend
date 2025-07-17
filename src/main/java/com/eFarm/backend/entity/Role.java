@@ -1,4 +1,4 @@
-package com.example.ferma.model;
+package com.ferma.entity;
 
 import jakarta.persistence.*;
 import java.util.Set;
@@ -6,7 +6,6 @@ import java.util.Set;
 @Entity
 @Table(name = "roles")
 public class Role {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -17,35 +16,20 @@ public class Role {
     @ManyToMany(mappedBy = "roles")
     private Set<User> users;
 
+    // Constructors
     public Role() {}
 
     public Role(String name) {
         this.name = name;
     }
 
-    // Getters dhe setters
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public Long getId() {
-        return id;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Set<User> getUsers() {
-        return users;
-    }
-
-    public void setUsers(Set<User> users) {
-        this.users = users;
-    }
+    public Set<User> getUsers() { return users; }
+    public void setUsers(Set<User> users) { this.users = users; }
 }
