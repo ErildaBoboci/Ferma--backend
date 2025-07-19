@@ -1,38 +1,23 @@
 package com.eFarm.backend;
 
-import com.eFarm.backend.service.AuthService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-@EnableAsync
-@EnableScheduling
-public class EFarmApplication implements CommandLineRunner {
-
-	@Autowired
-	private AuthService authService;
+public class EFarmApplication {
 
 	public static void main(String[] args) {
+		System.out.println("\n" + "=".repeat(60));
+		System.out.println("🚀 DUKE NISUR EFARM BACKEND APPLICATION");
+		System.out.println("=".repeat(60));
+
 		SpringApplication.run(EFarmApplication.class, args);
-	}
 
-	@Override
-	public void run(String... args) throws Exception {
-		// Initialize default roles on application startup
-		authService.initializeRoles();
-
-		System.out.println("=================================================");
-		System.out.println("         eFarm Backend Successfully Started     ");
-		System.out.println("=================================================");
-		System.out.println("Server is running on: http://localhost:8080");
-		System.out.println("Available endpoints:");
-		System.out.println("  - POST /api/auth/register");
-		System.out.println("  - POST /api/auth/login");
-		System.out.println("  - GET  /api/auth/test");
-		System.out.println("=================================================");
+		System.out.println("\n" + "🎉".repeat(20));
+		System.out.println("✅ EFARM BACKEND APLIKACIONI ËSHTË GATI!");
+		System.out.println("🌐 Frontend URL: http://localhost:3000");
+		System.out.println("🔧 Backend URL: http://localhost:8080");
+		System.out.println("📚 API Docs: http://localhost:8080/api/auth/");
+		System.out.println("🎉".repeat(20) + "\n");
 	}
 }

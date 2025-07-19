@@ -42,7 +42,17 @@ public class User {
     private Boolean isActive = true;
 
     @Column(name = "email_verified")
-    private Boolean emailVerified = true; // Për tani e vendosim true
+    private Boolean emailVerified = false; // Ndryshuar në false
+
+    // Kolona të reja për failed login attempts
+    @Column(name = "failed_login_attempts")
+    private Integer failedLoginAttempts = 0;
+
+    @Column(name = "account_locked_until")
+    private LocalDateTime accountLockedUntil;
+
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -62,8 +72,9 @@ public class User {
         this.firstName = firstName;
         this.lastName = lastName;
         this.createdAt = LocalDateTime.now();
-        this.isActive = true;
-        this.emailVerified = true;
+        this.isActive = false; // Ndryshuar në false
+        this.emailVerified = false; // Ndryshuar në false
+        this.failedLoginAttempts = 0;
     }
 
     // Getters and Setters
@@ -94,13 +105,22 @@ public class User {
     public Boolean getEmailVerified() { return emailVerified; }
     public void setEmailVerified(Boolean emailVerified) { this.emailVerified = emailVerified; }
 
+    public Integer getFailedLoginAttempts() { return failedLoginAttempts != null ? failedLoginAttempts : 0; }
+    public void setFailedLoginAttempts(Integer failedLoginAttempts) { this.failedLoginAttempts = failedLoginAttempts; }
+
+    public LocalDateTime getAccountLockedUntil() { return accountLockedUntil; }
+    public void setAccountLockedUntil(LocalDateTime accountLockedUntil) { this.accountLockedUntil = accountLockedUntil; }
+
+    public LocalDateTime getLastLogin() { return lastLogin; }
+    public void setLastLogin(LocalDateTime lastLogin) { this.lastLogin = lastLogin; }
+
     public Set<Role> getRoles() { return roles; }
     public void setRoles(Set<Role> roles) { this.roles = roles; }
 
-    // Metodat e reja që mungonin
+    // Business methods
     public Role getRole() {
         if (roles != null && !roles.isEmpty()) {
-            return roles.iterator().next(); // Merr rolin e parë
+            return roles.iterator().next();
         }
         return null;
     }
